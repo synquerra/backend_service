@@ -1,7 +1,7 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from odmantic import AIOEngine
 from app.config.config import settings
-from app.models.AbcStudentAccounts import AbcStudentAccounts
+#from app.models.AbcStudentAccounts import AbcStudentAccounts
 
 # Define global variables
 client: AsyncIOMotorClient = None
