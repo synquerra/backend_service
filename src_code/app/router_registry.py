@@ -1,13 +1,5 @@
-# Registering routers for the FastAPI application
-
-
-
-
-# Each entry contains:
-# - the router
-# - a prefix
-# - tags
-# - whether to include it in schema
+from app.routes.JwtAuthRoutes import router as jwt_router
 
 router_registry = [
+    {"router": jwt_router, "prefix": "/auth", "tags": ["Authentication"], "include_in_schema": True}
 ]

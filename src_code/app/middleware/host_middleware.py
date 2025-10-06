@@ -1,6 +1,6 @@
 from fastapi import Request, FastAPI
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 class HostHeaderValidatorMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: FastAPI, allowed_hosts: list[str]):

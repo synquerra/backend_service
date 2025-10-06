@@ -1,8 +1,8 @@
-import pika
 import ssl
-from app.config.config import settings
+import pika
 import json
 from contextlib import contextmanager
+from app.config.config import settings
 
 # Configurations
 RABBIT_HOST = getattr(settings, 'LOG_RMQ_HOST', None)

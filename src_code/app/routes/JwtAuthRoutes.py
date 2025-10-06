@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header
-from app.helpers.JwtHandler import JWTHandler
 from app.config.config import settings
+from app.helpers.JwtHandler import JWTHandler
 
 
 # Create the APIRouter instance

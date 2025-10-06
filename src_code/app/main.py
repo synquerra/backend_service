@@ -2,22 +2,21 @@
 import uvicorn
 import redis.asyncio as redis
 from starlette.types import Scope
+from fastapi import FastAPI, Request
 from app.net.client import HTTPClient
-from app.models import init_db, get_db
 from fastapi.security import HTTPBasic
-from app.libraries.Logger import Logger
 from app.config.config import settings
+from app.models import init_db, get_db
+from app.libraries.Logger import Logger
+from contextlib import asynccontextmanager
 from app.helpers.ErrorCodes import ErrorCodes
 from fastapi.openapi.utils import get_openapi
-from contextlib import asynccontextmanager
-from starlette.middleware.base import BaseHTTPMiddleware
 from app.router_registry import router_registry
 from fastapi.middleware.cors import CORSMiddleware
 from app.helpers.ErrorMessages import ErrorMessages
-from fastapi import FastAPI, Request, HTTPException
 from app.controllers.APIResponse import APIResponse
-from app.middleware.request_context import request_context
-from fastapi.responses import JSONResponse, HTMLResponse, RedirectResponse
+from starlette.middleware.base import BaseHTTPMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
 from app.middleware.redis_rate_limiter import init_redis, redis_rate_limiter
 
 
@@ -52,8 +51,8 @@ def custom_openapi():
         description=app.description,
         routes=app.routes,
     )
-    if "components" in openapi_schema:
-        openapi_schema["components"].pop("schemas", None)
+    # if "components" in openapi_schema:
+    #     openapi_schema["components"].pop("schemas", None)
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -113,7 +112,6 @@ class CustomHeaderMiddleware(BaseHTTPMiddleware):
 @app.middleware("http")
 async def assign_new_uuid_per_request(request: Request, call_next):
     Logger.get_instance(set_uuid=True)
-    request_context.set(request)
     return await call_next(request)
 
 # Apply security headers middleware

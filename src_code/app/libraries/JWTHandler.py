@@ -1,9 +1,6 @@
-# Import Libraries
 import jwt
-from pathlib import Path
 from typing import Dict
-
-# Import custome libraries
+from pathlib import Path
 from app.config.config import settings
 from app.libraries.Logger import Logger
 

@@ -1,11 +1,11 @@
-import logging as log
 import os
 import json
-from app.config.config import settings
 import time
 import uuid
 import pytz
+import logging as log
 from datetime import datetime
+from app.config.config import settings
 from app.libraries.RabbitMQ import push_to_rabbitmq
 
 NOTICE_LEVEL = 25
