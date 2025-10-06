@@ -1,0 +1,99 @@
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages #
+############
+# it's better to unpack these files and commit the raw source
+# git has its own built in compression methods
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Logs and databases #
+######################
+*.log
+*.sql
+*.sqlite
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+
+# IDE Files
+#-------------------------
+/nbproject/
+.idea/*
+
+## Sublime Text cache files
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+*.sublime-workspace
+*.sublime-project
+
+# Custom #
+######################
+config-prod-aws
+*.pyc
+.project
+.pydevproject
+config.ini
+examples
+dev_config
+prod_config
+local_config
+
+################
+
+# Ignore environment variables
+.env
+.env.auth.credentials
+
+# Ignore version records file
+# src_code/VERSION.txt
+# VERSION.txt
+
+# Ignore virtual environment
+.venv/
+
+# Ignore all files inside logs/
+# Ignore all files inside logs/ but keep the folder
+
+# Ignore compiled Python files
+**/__pycache__/
+**/*.pyc
+
+# Ignore config files (adjust if necessary)
+# AuthCredentials.py
+
+.idea
+.pytest_cache
+app/config/*.key
+app/config/*.pem
+# app/config/AuthCredentials.py
+
+src_code/app/config/*.key
+src_code/app/config/*.pem
+# src_code/app/config/AuthCredentials.py
+app/config/AuthCredentials.py
+
+# Ignore test data directory
+src_code/tests/test_data
