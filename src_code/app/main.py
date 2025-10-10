@@ -24,7 +24,10 @@ from app.middleware.redis_rate_limiter import init_redis, redis_rate_limiter
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
-    await init_redis()
+    try:
+        await init_redis()
+    except Exception as e:
+        Logger.get_instance().log_warning({"message": f"Redis init failed: {e}"})    
     yield
     if getattr(app.state, "redis", None):
         await app.state.redis.close()

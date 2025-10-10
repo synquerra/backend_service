@@ -56,17 +56,16 @@ config-prod-aws
 .project
 .pydevproject
 config.ini
-examples
-dev_config
-prod_config
-local_config
+
 
 ################
 
 # Ignore environment variables
 .env
 .env.auth.credentials
-
+.dockerignore
+.gitignore
+.DS_Store
 # Ignore version records file
 # src_code/VERSION.txt
 # VERSION.txt
@@ -86,14 +85,7 @@ local_config
 
 .idea
 .pytest_cache
-app/config/*.key
-app/config/*.pem
-# app/config/AuthCredentials.py
 
-src_code/app/config/*.key
-src_code/app/config/*.pem
-# src_code/app/config/AuthCredentials.py
-app/config/AuthCredentials.py
 
 # Ignore test data directory
 src_code/tests/test_data

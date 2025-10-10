@@ -28,3 +28,8 @@ jinja2
 python-jose[cryptography]
 slowapi==0.1.9
 redis>=5.0.0
+passlib[bcrypt]
+python-jose[cryptography]
+passlib[argon2]==1.7.4
+argon2-cffi==23.1.0
+
