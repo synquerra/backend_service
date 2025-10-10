@@ -1,53 +1,69 @@
 import re
+from html import escape
 from fastapi.responses import JSONResponse
 from app.controllers.APIResponse import APIResponse
 
 
 class ValidationHelper:
-    """
-    Helper utilities for validation, sanitization, and standard error responses.
-    """
+    """Centralized validation and sanitization helper for defensive coding."""
 
-    # ----------------------------------------------------
-    # ✅ Password Strength Validator
-    # ----------------------------------------------------
+    # Strong password validator
     @staticmethod
     def validate_password_strength(password: str) -> bool:
         """
-        Checks password complexity — must contain:
-        uppercase, lowercase, number, special character, and be at least 8 chars long.
+        Checks if a password contains:
+        - at least 1 uppercase
+        - at least 1 lowercase
+        - at least 1 number
+        - at least 1 special character
+        - length >= 8
         """
-        if not password:
-            return False
-        if (
-            len(password) < 8
-            or not re.search(r"[A-Z]", password)
-            or not re.search(r"[a-z]", password)
-            or not re.search(r"\d", password)
-            or not re.search(r"[@$!%*?&]", password)
-        ):
-            return False
-        return True
+        pattern = (
+            r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)"
+            r"(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+        )
+        return bool(re.match(pattern, password))
 
-    # ----------------------------------------------------
-    # ✅ Helper: Sanitize Input
-    # ----------------------------------------------------
+    # Sanitize user input to prevent script injection
     @staticmethod
     def sanitize_name(name: str) -> str:
         """
-        Removes unwanted characters and normalizes capitalization.
-        Example: '  jOhN! ' -> 'John'
+        Escapes HTML and trims whitespace for safe name inputs.
+        Example: "<John>" → "&lt;John&gt;"
         """
         if not name:
             return ""
-        return re.sub(r"[^a-zA-Z\s]", "", name.strip().title())
+        return escape(name.strip())
 
-    # ----------------------------------------------------
-    # ✅ Helper: Uniform Error Responses
-    # ----------------------------------------------------
+    # Uniform error response helper
     @staticmethod
     def error_response(msg: str, code: int):
-        """
-        Generates a standardized JSON error response using APIResponse format.
-        """
+        """Standardized API error response."""
         return JSONResponse(content=APIResponse.error(msg=msg, code=code), status_code=code)
+
+    # Mask email for privacy in responses
+    @staticmethod
+    def mask_email(email: str) -> str:
+        """
+        Masks part of the email before returning it in responses.
+        Example: john.doe@example.com → jo***@example.com
+        """
+        try:
+            local, domain = email.split("@")
+            if len(local) <= 2:
+                masked_local = local[0] + "***"
+            else:
+                masked_local = local[:2] + "***"
+            return f"{masked_local}@{domain}"
+        except Exception:
+            return "***@***"
+
+    # Mask mobile number for privacy
+    @staticmethod
+    def mask_mobile(mobile: str) -> str:
+        """
+        Example: 9876543210 → 98*****210
+        """
+        if not mobile or len(mobile) < 4:
+            return "****"
+        return f"{mobile[:2]}*****{mobile[-3:]}"

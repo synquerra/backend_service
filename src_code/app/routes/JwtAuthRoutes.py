@@ -7,7 +7,7 @@ from app.helpers.JwtHandler import JWTHandler
 router = APIRouter()
 
 # Initialize the JWTHandler
-jwt_handler = JWTHandler(secret_key=settings.JWT_SECRET_KEY,algorithm=settings.JWT_ALGORITHM,token_expiry_minutes=settings.JWT_TOKEN_EXPIRE_MINUTES)
+jwt_handler = JWTHandler(secret_key=settings.JWT_SECRET_KEY,algorithm=settings.JWT_ALGORITHM,token_expiry_minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
 
 @router.post("/generate-token/")
 async def generate_token(username: str):

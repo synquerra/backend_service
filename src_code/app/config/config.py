@@ -92,7 +92,8 @@ class Settings(BaseSettings):
     # JWT Auth Configurations
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
-    JWT_TOKEN_EXPIRE_MINUTES: int
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int
     
     # API request Rate Limit
     RATE_LIMIT: int
