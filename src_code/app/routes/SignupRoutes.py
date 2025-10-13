@@ -1,15 +1,7 @@
-from fastapi import APIRouter, Request
+from fastapi import Request
 from app.controllers.SignupController import SignupController, SignupRequest
 
-router = APIRouter()
 signup_controller = SignupController()
 
-@router.post("/signup", summary="Register a new user")
-async def signup(request: Request, payload: SignupRequest):
-    """
-    Create a new user with:
-    - UNIQUE_ID auto-generated
-    - Unique EMAIL and MOBILE
-    - Password hashed using Argon2
-    """
+async def signup_user(payload: SignupRequest, request: Request):
     return await signup_controller.register_user(payload, request)

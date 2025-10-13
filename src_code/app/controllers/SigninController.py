@@ -20,7 +20,7 @@ def now_ist():
 
 # Signin Request Model (Pydantic v2 compatible)
 class SigninRequest(BaseModel):
-    email: EmailStr = Field(..., example="john@example.com")
+    email: str = Field(..., example="john@example.com")
     password: str = Field(..., min_length=8, max_length=256, example="StrongPassword123!")
 
     class Config:

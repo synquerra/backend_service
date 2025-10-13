@@ -26,4 +26,7 @@ class ErrorMessages:
     USER_REGISTERED_SUCCESS = "User registered successfully"
     LOGIN_SUCCESS = "Login successful"
     LOGIN_FAILED = "Invalid email or password"
+    DEVICE_FETCHED = "Devices fetched successfully."
+    DEVICE_NOT_FOUND = "Device Not Found"
+    MISSING_GRAPHQL_QUERY = "Missing GraphQL query"
     

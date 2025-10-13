@@ -1,9 +1,12 @@
-from app.routes.JwtAuthRoutes import router as jwt_router
-from app.routes.SignupRoutes import router as signup_router
-from app.routes.SigninRoutes import router as signin_router
+from app.routes.SigninGraphQLRoute import router as signin_graphql_route
+from app.routes.SignupGraphQLRoute import router as signup_graphql_route
+from app.routes.DeviceMasterGraphQLRoute import router as device_graphql_route
 
-router_registry = [
-    {"router": jwt_router, "prefix": "/auth", "tags": ["Authentication"], "include_in_schema": True},
-    {"router": signup_router, "prefix": "/auth", "tags": ["Authentication"], "include_in_schema": True},
-    {"router": signin_router, "prefix": "/auth", "tags": ["Authentication"], "include_in_schema": True}
+
+router_registry = []
+
+router_registry += [
+    {"router": signin_graphql_route, "prefix": "/auth", "tags": ["Signin GraphQL"], "include_in_schema": True},
+    {"router": signup_graphql_route, "prefix": "/auth", "tags": ["Signup GraphQL"], "include_in_schema": True},
+    {"router": device_graphql_route, "prefix": "/device", "tags": ["Device Master GraphQL"], "include_in_schema": True}
 ]

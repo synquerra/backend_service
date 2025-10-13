@@ -66,6 +66,9 @@ config.ini
 .dockerignore
 .gitignore
 .DS_Store
+.src_code/.DS_Store
+.src_code/app/.DS_Store
+
 # Ignore version records file
 # src_code/VERSION.txt
 # VERSION.txt
