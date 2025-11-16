@@ -107,6 +107,7 @@ class Settings(BaseSettings):
         return [h.strip() for h in self.ALLOWED_HOSTS.split(",") if h.strip()]
     MONGO_CA_CERT: str = ''
     MONGO_CLIENT_CERT: str = ''
+    FRONTEND_ORIGINS: str = ""
     class Config:
         env_file = str(ENV_FILE)
         extra = "allow"

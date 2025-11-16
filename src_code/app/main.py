@@ -19,6 +19,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from app.middleware.redis_rate_limiter import init_redis, redis_rate_limiter
 
+ALLOWED_CSP_ORIGINS = " ".join(settings.FRONTEND_ORIGINS.split(","))
+ALLOWED_CORS_ORIGINS = settings.FRONTEND_ORIGINS.split(",")
+
 
 # Lifespan hook for startup tasks
 @asynccontextmanager
@@ -92,6 +95,7 @@ class CustomHeaderMiddleware(BaseHTTPMiddleware):
         response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=(), interest-cohort=()"
 
         path = request["path"]
+        
         if path.startswith("/docs") or path.startswith("/openapi.json"):
             response.headers["Content-Security-Policy"] = (
                 "default-src 'self' https://cdn.jsdelivr.net; "
@@ -107,7 +111,7 @@ class CustomHeaderMiddleware(BaseHTTPMiddleware):
                 "base-uri 'none'; "
                 "form-action 'none'; "
                 "img-src 'self'; "
-                "connect-src 'self'"
+                 f"connect-src 'self' {ALLOWED_CSP_ORIGINS}; "
             )
         return response
 

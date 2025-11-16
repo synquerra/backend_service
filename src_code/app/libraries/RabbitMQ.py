@@ -30,11 +30,11 @@ class RabbitMQPublisher:
     def connect(self):
         """Context manager to handle RabbitMQ connection."""
         try:
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-            ssl_context.set_ciphers(self.ssl_ciphers_txt)
-            url = f"amqps://{self.rmq_username}:{self.rmq_password}@{self.host}:{self.port}"
+            # ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+            # ssl_context.set_ciphers(self.ssl_ciphers_txt)
+            url = f"amqp://{self.rmq_username}:{self.rmq_password}@{self.host}:{self.port}"
             parameters = pika.URLParameters(url)
-            parameters.ssl_options = pika.SSLOptions(context=ssl_context)
+            # parameters.ssl_options = pika.SSLOptions(context=ssl_context)
             self.connection = pika.BlockingConnection(parameters)
             self.channel = self.connection.channel()
             # Ensure the queue matches the existing configuration
