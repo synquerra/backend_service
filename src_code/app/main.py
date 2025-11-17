@@ -20,7 +20,6 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from app.middleware.redis_rate_limiter import init_redis, redis_rate_limiter
 
 ALLOWED_CSP_ORIGINS = " ".join(settings.FRONTEND_ORIGINS.split(","))
-ALLOWED_CORS_ORIGINS = settings.FRONTEND_ORIGINS.split(",")
 
 
 # Lifespan hook for startup tasks
@@ -78,7 +77,7 @@ for r in router_registry:
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.FRONTEND_ORIGINS.split(","),
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
