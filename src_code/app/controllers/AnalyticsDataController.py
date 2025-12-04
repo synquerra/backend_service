@@ -1,11 +1,12 @@
 # app/controllers/AnalyticsDataController.py
-from fastapi import Request
-from fastapi.responses import JSONResponse
 from bson import ObjectId
+from fastapi import Request
 from app.models import get_db
+from fastapi.responses import JSONResponse
+from app.helpers.ErrorCodes import ErrorCodes
 from app.models.AnalyticsData import AnalyticsData
 from app.controllers.APIResponse import APIResponse
-from app.helpers.ErrorCodes import ErrorCodes
+
 
 def normalize_processed_at(val):
     if val is None:
@@ -32,9 +33,7 @@ def serialize(record):
     d["signal"] = d.get("signal") or d.get("Signal")
     d["alert"] = d.get("alert") or d.get("Alert")
 
-    d["processed_at"] = normalize_processed_at(
-        d.get("processed_at")
-    )
+    d["processed_at"] = normalize_processed_at(d.get("processed_at"))
 
     # convert created_at if exists
     if d.get("created_at") and hasattr(d["created_at"], "isoformat"):

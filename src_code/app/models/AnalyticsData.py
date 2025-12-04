@@ -14,14 +14,13 @@ class AnalyticsData(Model):
     packet: Optional[str] = None
     latitude: Optional[str] = None
     longitude: Optional[str] = None
-    speed: Optional[str] = None
-    battery: Optional[str] = None        # maps Battery
-    signal: Optional[str] = None         # maps Signal
-    alert: Optional[str] = None          # maps Alert
+    speed: Optional[int] = None
+    Battery: Optional[str] = None        # maps Battery
+    Signal: Optional[str] = None         # maps Signal
+    Alert: Optional[str] = None          # maps Alert
     raw_text: Optional[str] = None
 
     timestamp_normalized: Optional[str] = None
-    timestamp_iso: Optional[str] = None
     timestamp: Optional[str] = None
 
     received_at_ist: Optional[str] = None

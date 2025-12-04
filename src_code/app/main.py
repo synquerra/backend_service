@@ -56,8 +56,6 @@ def custom_openapi():
         description=app.description,
         routes=app.routes,
     )
-    # if "components" in openapi_schema:
-    #     openapi_schema["components"].pop("schemas", None)
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 

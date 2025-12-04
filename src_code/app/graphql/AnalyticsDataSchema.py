@@ -2,7 +2,27 @@
 import json
 import strawberry
 from fastapi import Request
-from strawberry.exceptions import GraphQLError
+from datetime import datetime
+
+def fix_utc(v):
+    if not v:
+        return None
+
+    # Case: {"$date": "..."} from Mongo
+    if isinstance(v, dict) and "$date" in v:
+        return v["$date"]  # already ISO with Z
+
+    # Case: python datetime
+    if isinstance(v, datetime):
+        return v.isoformat().replace("+00:00", "Z")
+
+    # Case: plain string → if no timezone, force UTC
+    s = str(v)
+    if "Z" in s or "+" in s:
+        return s  # already has timezone
+
+    return s + "Z"
+
 
 def to_camel(d):
     return {
@@ -20,10 +40,9 @@ def to_camel(d):
         "alert": d["alert"],
         "rawText": d["raw_text"],
         "timestampNormalized": d["timestamp_normalized"],
-        "timestampIso": d["timestamp_iso"],
         "timestamp": d["timestamp"],
         "receivedAtIst": d["received_at_ist"],
-        "processedAt": d["processed_at"],
+        "processedAt": fix_utc(d["processed_at"]),
         "type": d["type"],
         "createdAt": d["created_at"],
     }
@@ -44,7 +63,6 @@ class AnalyticsDataType:
     alert: str | None
     rawText: str | None
     timestampNormalized: str | None
-    timestampIso: str | None
     timestamp: str | None
     receivedAtIst: str | None
     processedAt: str | None
