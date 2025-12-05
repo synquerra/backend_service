@@ -1,72 +1,89 @@
-# app/controllers/AnalyticsDataController.py
-from bson import ObjectId
 from fastapi import Request
-from app.models import get_db
 from fastapi.responses import JSONResponse
-from app.helpers.ErrorCodes import ErrorCodes
+from bson import ObjectId
+from dateutil import parser
+
+from app.models import get_db
 from app.models.AnalyticsData import AnalyticsData
 from app.controllers.APIResponse import APIResponse
 
 
-def normalize_processed_at(val):
-    if val is None:
+def parse_date(v):
+    if not v:
         return None
-    if isinstance(val, dict) and "$date" in val:
-        return val["$date"]
-    if hasattr(val, "isoformat"):
-        return val.isoformat()
-    return str(val)
+    try:
+        return parser.parse(str(v)).isoformat()
+    except:
+        return str(v)
 
-def serialize(record):
-    d = record.dict() if hasattr(record, "dict") else dict(record)
 
-    # handle _id → string
-    _id = d.get("_id") or d.get("id")
-    if isinstance(_id, dict) and "$oid" in _id:
-        d["id"] = _id["$oid"]
-    elif isinstance(_id, ObjectId):
-        d["id"] = str(_id)
+def serialize(rec):
+    d = rec.dict()
 
-    # map mixed-case fields
-    d["geoid"] = d.get("geoid") or d.get("Geoid")
-    d["battery"] = d.get("battery") or d.get("Battery")
-    d["signal"] = d.get("signal") or d.get("Signal")
-    d["alert"] = d.get("alert") or d.get("Alert")
+    # Convert _id → string
+    d["id"] = str(rec.id)
+    d.pop("_id", None)
 
-    d["processed_at"] = normalize_processed_at(d.get("processed_at"))
+    # HEADER TIMESTAMP (always device_timestamp)
+    device_ts = d.get("device_timestamp")
 
-    # convert created_at if exists
-    if d.get("created_at") and hasattr(d["created_at"], "isoformat"):
-        d["created_at"] = d["created_at"].isoformat()
+    # SORTING TIMESTAMP (fallback allowed)
+    sorting_ts = (
+        d.get("device_timestamp")
+        or d.get("raw_timestamp")
+        or d.get("received_at_utc")
+    )
 
     return {
         "id": d.get("id"),
         "topic": d.get("topic"),
         "imei": d.get("imei"),
         "interval": d.get("interval"),
-        "geoid": d.get("geoid"),
+
+        "geoid": d.get("Geoid"),
         "packet": d.get("packet"),
+
         "latitude": d.get("latitude"),
         "longitude": d.get("longitude"),
         "speed": d.get("speed"),
-        "battery": d.get("battery"),
-        "signal": d.get("signal"),
-        "alert": d.get("alert"),
-        "raw_text": d.get("raw_text"),
-        "timestamp_normalized": d.get("timestamp_normalized"),
-        "timestamp_iso": d.get("timestamp_iso"),
-        "timestamp": d.get("timestamp"),
-        "received_at_ist": d.get("received_at_ist"),
-        "processed_at": d.get("processed_at"),
+
+        "battery": d.get("Battery"),
+        "signal": d.get("Signal"),
+        "alert": d.get("Alert"),
+
+        # UI HEADER → ALWAYS device_timestamp
+        "deviceTimestamp": parse_date(device_ts),
+
+        # Display raw UTC (if needed)
+        "receivedAtUtc": parse_date(d.get("received_at_utc")),
+
+        # UI LIST SORTING → best available timestamp
+        "timestamp": parse_date(sorting_ts),
+
+        # RAW fields
+        "rawTimestamp": parse_date(d.get("raw_timestamp")),
+        "rawPacket": d.get("raw_packet"),
+        "rawImei": d.get("raw_imei"),
+        "rawAlert": d.get("raw_Alert"),
+        "rawTemperature": d.get("raw_temperature"),
+        "rawSpeed": d.get("raw_speed"),
+        "rawSignal": d.get("raw_Signal"),
+        "rawBattery": d.get("raw_Battery"),
+        "rawGeoid": d.get("raw_Geoid"),
+        "rawLatitude": d.get("raw_latitude"),
+        "rawLongitude": d.get("raw_longitude"),
+        "rawInterval": d.get("raw_interval"),
+
+
         "type": d.get("type"),
-        "created_at": d.get("created_at"),
     }
+
 
 class AnalyticsDataController:
 
     async def all(self, request: Request):
         db = get_db()
-        recs = await db.find(AnalyticsData, {})
+        recs = await db.find(AnalyticsData)
         return JSONResponse(APIResponse.success("ok", [serialize(r) for r in recs]))
 
     async def by_id(self, id: str, request: Request):
@@ -93,11 +110,11 @@ class AnalyticsDataController:
 
     async def paginated(self, skip: int, limit: int, request: Request):
         db = get_db()
-        recs = await db.find(AnalyticsData, {})
-        sliced = recs[skip: skip + limit]
+        recs = await db.find(AnalyticsData)
+        sliced = recs[skip:skip + limit]
         return JSONResponse(APIResponse.success("ok", [serialize(r) for r in sliced]))
 
     async def count(self, request: Request):
         db = get_db()
-        c = await db.count(AnalyticsData)
-        return JSONResponse(APIResponse.success("ok", {"count": c}))
+        count = await db.count(AnalyticsData)
+        return JSONResponse(APIResponse.success("ok", {"count": count}))

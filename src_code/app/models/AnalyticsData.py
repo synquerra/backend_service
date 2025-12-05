@@ -1,33 +1,41 @@
-# app/models/AnalyticsData.py
-from odmantic import Model, Field
-from datetime import datetime, timedelta
+from odmantic import Model
 from typing import Optional, Any
 
-def now_ist():
-    return datetime.utcnow() + timedelta(hours=5, minutes=30)
 
 class AnalyticsData(Model):
     topic: Optional[str] = None
     imei: Optional[str] = None
     interval: Optional[int] = None
-    geoid: Optional[str] = None          # maps Geoid
+
+    Geoid: Optional[str] = None
     packet: Optional[str] = None
+
     latitude: Optional[str] = None
     longitude: Optional[str] = None
     speed: Optional[int] = None
-    Battery: Optional[str] = None        # maps Battery
-    Signal: Optional[str] = None         # maps Signal
-    Alert: Optional[str] = None          # maps Alert
-    raw_text: Optional[str] = None
 
-    timestamp_normalized: Optional[str] = None
-    timestamp: Optional[str] = None
+    Battery: Optional[str] = None
+    Signal: Optional[str] = None
+    Alert: Optional[str] = None
 
-    received_at_ist: Optional[str] = None
-    processed_at: Optional[Any] = None   # can be $date dict or datetime
+    device_timestamp: Optional[Any] = None
+    received_at_utc: Optional[Any] = None
 
     type: Optional[str] = None
 
+    raw_packet: Optional[str] = None
+    raw_imei: Optional[str] = None
+    raw_Alert: Optional[str] = None
+    raw_timestamp: Optional[str] = None
+    raw_latitude: Optional[str] = None
+    raw_longitude: Optional[str] = None
+    raw_speed: Optional[str] = None
+    raw_temperature: Optional[str] = None
+    raw_Battery: Optional[str] = None
+    raw_Signal: Optional[str] = None
+    raw_interval: Optional[str] = None
+    raw_Geoid: Optional[str] = None
+
     model_config = {
-        "collection": "analytics_data"
+        "collection": "analytics_data",
     }

@@ -1,51 +1,10 @@
-# app/graphql/AnalyticsDataSchema.py
-import json
 import strawberry
-from fastapi import Request
-from datetime import datetime
+from bson import ObjectId
 
-def fix_utc(v):
-    if not v:
-        return None
+from app.models import get_db
+from app.models.AnalyticsData import AnalyticsData
+from app.controllers.AnalyticsDataController import serialize
 
-    # Case: {"$date": "..."} from Mongo
-    if isinstance(v, dict) and "$date" in v:
-        return v["$date"]  # already ISO with Z
-
-    # Case: python datetime
-    if isinstance(v, datetime):
-        return v.isoformat().replace("+00:00", "Z")
-
-    # Case: plain string → if no timezone, force UTC
-    s = str(v)
-    if "Z" in s or "+" in s:
-        return s  # already has timezone
-
-    return s + "Z"
-
-
-def to_camel(d):
-    return {
-        "id": d["id"],
-        "topic": d["topic"],
-        "imei": d["imei"],
-        "interval": d["interval"],
-        "geoid": d["geoid"],
-        "packet": d["packet"],
-        "latitude": d["latitude"],
-        "longitude": d["longitude"],
-        "speed": d["speed"],
-        "battery": d["battery"],
-        "signal": d["signal"],
-        "alert": d["alert"],
-        "rawText": d["raw_text"],
-        "timestampNormalized": d["timestamp_normalized"],
-        "timestamp": d["timestamp"],
-        "receivedAtIst": d["received_at_ist"],
-        "processedAt": fix_utc(d["processed_at"]),
-        "type": d["type"],
-        "createdAt": d["created_at"],
-    }
 
 @strawberry.type
 class AnalyticsDataType:
@@ -53,71 +12,75 @@ class AnalyticsDataType:
     topic: str | None
     imei: str | None
     interval: int | None
+
     geoid: str | None
     packet: str | None
+
     latitude: str | None
     longitude: str | None
-    speed: str | None
-    battery: str | None
-    signal: str | None
+    speed: int | None
+
+    battery: int | None
+    signal: int | None
     alert: str | None
-    rawText: str | None
-    timestampNormalized: str | None
+
+    # PRIMARY field used by frontend for sorting/display
     timestamp: str | None
-    receivedAtIst: str | None
-    processedAt: str | None
+
+    deviceTimestamp: str | None
+    receivedAtUtc: str | None
+    rawTimestamp: str | None
+
+    rawPacket: str | None
+    rawImei: str | None
+    rawAlert: str | None
+    rawTemperature: str | None
+    rawSpeed: str | None
+    rawSignal: str | None
+    rawBattery: str | None
+    rawGeoid: str | None
+    rawLatitude: str | None
+    rawLongitude: str | None
+    rawInterval: str | None
+
     type: str | None
-    createdAt: str | None
+
 
 @strawberry.type
 class Query:
 
     @strawberry.field
-    async def analyticsData(self, info) -> list[AnalyticsDataType]:
-        from app.routes.AnalyticsDataRoutes import all_handler
-        req: Request = info.context["request"]
-        resp = await all_handler(req)
-        raw = json.loads(resp.body)["data"]
-        return [AnalyticsDataType(**to_camel(r)) for r in raw]
+    async def analyticsData(self) -> list[AnalyticsDataType]:
+        recs = await get_db().find(AnalyticsData)
+        return [AnalyticsDataType(**serialize(r)) for r in recs]
 
     @strawberry.field
-    async def analyticsDataById(self, id: str, info) -> AnalyticsDataType:
-        from app.routes.AnalyticsDataRoutes import by_id_handler
-        req: Request = info.context["request"]
-        resp = await by_id_handler(id, req)
-        raw = json.loads(resp.body)["data"]
-        return AnalyticsDataType(**to_camel(raw))
+    async def analyticsDataById(self, id: str) -> AnalyticsDataType | None:
+        try:
+            rec = await get_db().find_one(AnalyticsData, {"_id": ObjectId(id)})
+        except:
+            return None
+        return AnalyticsDataType(**serialize(rec)) if rec else None
 
     @strawberry.field
-    async def analyticsDataByTopic(self, topic: str, info) -> list[AnalyticsDataType]:
-        from app.routes.AnalyticsDataRoutes import by_topic_handler
-        req: Request = info.context["request"]
-        resp = await by_topic_handler(topic, req)
-        raw = json.loads(resp.body)["data"]
-        return [AnalyticsDataType(**to_camel(r)) for r in raw]
+    async def analyticsDataByTopic(self, topic: str) -> list[AnalyticsDataType]:
+        recs = await get_db().find(AnalyticsData, {"topic": topic})
+        return [AnalyticsDataType(**serialize(r)) for r in recs]
 
     @strawberry.field
-    async def analyticsDataByImei(self, imei: str, info) -> list[AnalyticsDataType]:
-        from app.routes.AnalyticsDataRoutes import by_imei_handler
-        req: Request = info.context["request"]
-        resp = await by_imei_handler(imei, req)
-        raw = json.loads(resp.body)["data"]
-        return [AnalyticsDataType(**to_camel(r)) for r in raw]
+    async def analyticsDataByImei(self, imei: str) -> list[AnalyticsDataType]:
+        recs = await get_db().find(AnalyticsData, {"imei": imei})
+        return [AnalyticsDataType(**serialize(r)) for r in recs]
 
     @strawberry.field
-    async def analyticsDataPaginated(self, skip: int, limit: int, info) -> list[AnalyticsDataType]:
-        from app.routes.AnalyticsDataRoutes import paginated_handler
-        req: Request = info.context["request"]
-        resp = await paginated_handler(skip, limit, req)
-        raw = json.loads(resp.body)["data"]
-        return [AnalyticsDataType(**to_camel(r)) for r in raw]
+    async def analyticsDataPaginated(self, skip: int, limit: int) -> list[AnalyticsDataType]:
+        recs = await get_db().find(AnalyticsData)
+        sliced = recs[skip:skip + limit]
+        return [AnalyticsDataType(**serialize(r)) for r in sliced]
 
     @strawberry.field
-    async def analyticsDataCount(self, info) -> int:
-        from app.routes.AnalyticsDataRoutes import count_handler
-        req: Request = info.context["request"]
-        resp = await count_handler(req)
-        raw = json.loads(resp.body)["data"]
-        return raw["count"]
+    async def analyticsDataCount(self) -> int:
+        return await get_db().count(AnalyticsData)
+
 
 schema = strawberry.Schema(query=Query)
