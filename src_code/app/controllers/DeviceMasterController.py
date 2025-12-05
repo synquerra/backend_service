@@ -7,6 +7,7 @@ from app.models.DeviceMaster import DeviceMaster
 from app.controllers.APIResponse import APIResponse
 from app.helpers.ErrorCodes import ErrorCodes
 
+
 def serialize_device(record):
     if not record:
         return None
@@ -15,6 +16,7 @@ def serialize_device(record):
 
     created = data.get("created_at")
 
+    # Normalize datetime → string
     if isinstance(created, datetime):
         created_stripped = created.strftime("%Y-%m-%d %H:%M:%S")
     elif isinstance(created, str):
@@ -26,7 +28,7 @@ def serialize_device(record):
         "topic": data.get("topic"),
         "imei": data.get("imei"),
         "interval": data.get("interval"),
-        "geoid": data.get("Geoid"),
+        "geoid": data.get("Geoid"),   # USE EXACT DB FIELD
         "createdAt": created_stripped,
     }
 

@@ -1,38 +1,35 @@
+# app/controllers/AnalyticsDataController.py
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from bson import ObjectId
 from dateutil import parser
+from typing import Any
 
 from app.models import get_db
 from app.models.AnalyticsData import AnalyticsData
 from app.controllers.APIResponse import APIResponse
 
-
-def parse_date(v):
+def parse_date(v: Any):
     if not v:
         return None
+    # If it's already a datetime, return isoformat
     try:
+        if hasattr(v, "isoformat"):
+            return v.isoformat()
         return parser.parse(str(v)).isoformat()
     except:
         return str(v)
 
-
-def serialize(rec):
+def serialize(rec: AnalyticsData):
+    # rec is an ODMantic model instance
     d = rec.dict()
 
-    # Convert _id → string
-    d["id"] = str(rec.id)
+    # Convert _id → string (ODMantic uses 'id' attribute)
+    d["id"] = str(d.get("id") or d.get("_id") or "")
     d.pop("_id", None)
 
-    # HEADER TIMESTAMP (always device_timestamp)
-    device_ts = d.get("device_timestamp")
-
-    # SORTING TIMESTAMP (fallback allowed)
-    sorting_ts = (
-        d.get("device_timestamp")
-        or d.get("raw_timestamp")
-        or d.get("received_at_utc")
-    )
+    # Use device_timestamp (datetime) as canonical sorting/display timestamp
+    device_ts = d.get("device_timestamp")  # this is a datetime object (tz-aware) or None
 
     return {
         "id": d.get("id"),
@@ -42,7 +39,6 @@ def serialize(rec):
 
         "geoid": d.get("Geoid"),
         "packet": d.get("packet"),
-
         "latitude": d.get("latitude"),
         "longitude": d.get("longitude"),
         "speed": d.get("speed"),
@@ -51,17 +47,16 @@ def serialize(rec):
         "signal": d.get("Signal"),
         "alert": d.get("Alert"),
 
-        # UI HEADER → ALWAYS device_timestamp
+        # UI HEADER → ALWAYS device_timestamp (server IST time) in ISO
         "deviceTimestamp": parse_date(device_ts),
 
-        # Display raw UTC (if needed)
-        "receivedAtUtc": parse_date(d.get("received_at_utc")),
+        # device raw timestamp (string as device sent)
+        "deviceRawTimestamp": d.get("device_raw_timestamp"),
 
-        # UI LIST SORTING → best available timestamp
-        "timestamp": parse_date(sorting_ts),
+        # UI LIST SORTING → using device_timestamp as the canonical sortable timestamp
+        "timestamp": parse_date(device_ts),
 
-        # RAW fields
-        "rawTimestamp": parse_date(d.get("raw_timestamp")),
+        # RAW flattened fields (camelCase)
         "rawPacket": d.get("raw_packet"),
         "rawImei": d.get("raw_imei"),
         "rawAlert": d.get("raw_Alert"),
@@ -73,11 +68,10 @@ def serialize(rec):
         "rawLatitude": d.get("raw_latitude"),
         "rawLongitude": d.get("raw_longitude"),
         "rawInterval": d.get("raw_interval"),
-
+        "rawBody": d.get("raw_body"),
 
         "type": d.get("type"),
     }
-
 
 class AnalyticsDataController:
 
