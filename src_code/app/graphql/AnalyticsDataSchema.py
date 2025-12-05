@@ -189,6 +189,14 @@ class AnalyticsHealthType:
     temperatureHealthIndex: float
     temperatureStatus: str
 
+@strawberry.type
+class UptimeAnalyticsType:
+    score: float
+    expectedPackets: int
+    receivedPackets: int
+    largestGapSec: float
+    dropouts: int
+
 def safe_float(x):
     try:
         return float(str(x).replace("c", "").replace("C", "").strip())
@@ -362,6 +370,101 @@ class Query:
             movementStats=stats,
             temperatureHealthIndex=thi,
             temperatureStatus=temp_status,
+        )
+
+    @strawberry.field
+    async def analyticsUptime(self, imei: str) -> UptimeAnalyticsType:
+        recs = await get_db().find(AnalyticsData, {"imei": imei})
+
+        # Sort newest → oldest by device_timestamp or raw timestamp
+        def extract_ts(obj):
+            return (
+                    getattr(obj, "device_timestamp", None)
+                    or getattr(obj, "deviceRawTimestamp", None)
+                    or getattr(obj, "timestamp", None)
+                    or ""
+            )
+
+        recs.sort(key=lambda r: extract_ts(r), reverse=True)
+
+        now = datetime.now(timezone.utc).astimezone(IST)
+        cutoff = now - timedelta(hours=24)
+
+        # -----------------------------
+        # Collect timestamps (last 24 hours)
+        # -----------------------------
+        packets = []
+        for r in recs:
+            raw = extract_ts(r)
+            dt = parse_iso_to_ist(raw)
+            if dt and dt >= cutoff:
+                packets.append(dt)
+
+        # Expected packets based on 150 sec interval
+        expected = int(86400 / 150)  # 576
+        received = len(packets)
+
+        # -----------------------------
+        # Largest gap & dropout count
+        # -----------------------------
+        if not packets:
+            return UptimeAnalyticsType(
+                score=0,
+                expectedPackets=expected,
+                receivedPackets=0,
+                largestGapSec=0,
+                dropouts=0
+            )
+
+        packets_sorted = sorted(packets)
+
+        largest_gap = 0
+        dropouts = 0
+
+        for i in range(1, len(packets_sorted)):
+            diff = (packets_sorted[i] - packets_sorted[i - 1]).total_seconds()
+
+            if diff > largest_gap:
+                largest_gap = diff
+
+            if diff > 600:  # >10 min
+                dropouts += 1
+
+        # -----------------------------
+        # Scoring System
+        # -----------------------------
+        consistencyScore = (received / expected) * 100 if expected else 0
+        consistencyScore = min(100, max(0, consistencyScore))
+
+        # Gap score
+        if largest_gap <= 180:
+            gapScore = 100
+        elif largest_gap <= 600:
+            gapScore = 80
+        elif largest_gap <= 1800:
+            gapScore = 50
+        elif largest_gap <= 3600:
+            gapScore = 20
+        else:
+            gapScore = 0
+
+        # Dropout score
+        dropoutScore = max(0, 100 - (dropouts * 15))
+
+        # Final weighted score
+        score = (
+                consistencyScore * 0.5 +
+                gapScore * 0.3 +
+                dropoutScore * 0.2
+        )
+        score = round(max(0, min(100, score)), 1)
+
+        return UptimeAnalyticsType(
+            score=score,
+            expectedPackets=expected,
+            receivedPackets=received,
+            largestGapSec=largest_gap,
+            dropouts=dropouts
         )
 
 
