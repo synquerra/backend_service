@@ -132,9 +132,9 @@ async def startup_event():
 
 # Health & Utility Endpoints
 
-@app.get("/", summary="Welcome to SYNQUERRA API", include_in_schema=True)
+@app.get("/", summary="Welcome to SYNQUERRA API", include_in_schema=True, status_code=200)
 def home():
-    return RedirectResponse(url="/docs")
+    return {"status": "ok"}
 
 
 # Register middleware at creation time
