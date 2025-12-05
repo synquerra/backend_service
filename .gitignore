@@ -62,6 +62,7 @@ config.ini
 
 # Ignore environment variables
 .env
+/src_code/.env
 .env.auth.credentials
 .dockerignore
 .gitignore
