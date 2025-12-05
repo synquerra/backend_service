@@ -33,6 +33,7 @@ ENV PYTHONUNBUFFERED 1  # Force Python to output to stdout and stderr without bu
 
 # Copy the rest of the application code and config file into the container
 COPY src_code/. /opt/
+COPY .env /opt/.env
 
 # Install Python dependencies and clean up
 RUN pip install --no-cache-dir -r requirements.txt && \
