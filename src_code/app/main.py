@@ -134,7 +134,7 @@ async def startup_event():
 
 @app.get("/", summary="Welcome to SYNQUERRA API", include_in_schema=True, status_code=200)
 def home():
-    return {"status": "ok"}
+    return JSONResponse(status_code=200, content={"status": "ok"})
 
 
 # Register middleware at creation time

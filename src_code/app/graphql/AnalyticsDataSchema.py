@@ -378,12 +378,17 @@ class Query:
 
         # Sort newest → oldest by device_timestamp or raw timestamp
         def extract_ts(obj):
-            return (
+            raw = (
                     getattr(obj, "device_timestamp", None)
                     or getattr(obj, "deviceRawTimestamp", None)
                     or getattr(obj, "timestamp", None)
-                    or ""
+                    or None
             )
+
+            dt = parse_iso_to_ist(raw)
+
+            # fallback: ensure sort() never receives a string
+            return dt or datetime.min.replace(tzinfo=IST)
 
         recs.sort(key=lambda r: extract_ts(r), reverse=True)
 
