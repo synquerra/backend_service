@@ -16,13 +16,7 @@ WORKDIR /opt/
 # COPY requirements.txt .
 
 # Install system dependencies
-RUN apt-get update && \
-    apt-get install -y gcc libpq-dev vim&& \
-   pip install --upgrade pip && \
-   apt-get remove -y gcc libpq-dev && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-   rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y gcc libpq-dev vim && pip install --upgrade pip && apt-get remove -y gcc libpq-dev && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 
 RUN mkdir logs
@@ -36,8 +30,7 @@ COPY src_code/. /opt/
 COPY .env /opt/.env
 
 # Install Python dependencies and clean up
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir python-multipart fastapi-cli
+RUN pip install --no-cache-dir -r requirements.txt && pip install --no-cache-dir python-multipart fastapi-cli
 
 
 # Expose the port FastAPI will run on

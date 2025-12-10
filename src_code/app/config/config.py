@@ -108,6 +108,11 @@ class Settings(BaseSettings):
     MONGO_CA_CERT: str = ''
     MONGO_CLIENT_CERT: str = ''
     FRONTEND_ORIGINS: str = ""
+    # MQTT Config
+    MQTT_BROKER: str
+    MQTT_PORT: int = 1883
+    MQTT_USERNAME: str | None = None
+    MQTT_PASSWORD: str | None = None
     class Config:
         env_file = str(ENV_FILE)
         extra = "allow"
