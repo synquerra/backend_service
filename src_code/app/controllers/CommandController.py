@@ -1,7 +1,10 @@
+# app/controllers/CommandController.py
+
 import json
-from app.models import get_db
 from datetime import datetime
 from fastapi import HTTPException
+
+from app.models import get_db
 from app.models.DeviceCommand import DeviceCommand
 from app.libraries.MqttConnector import mqtt_connector
 from app.constants.CommandDefinitions import COMMAND_DEFINITIONS
@@ -12,11 +15,13 @@ class CommandController:
     @staticmethod
     async def send(command_req):
         """
-        Unified command dispatcher for all device commands.
-        Enforces firmware-level validation before publishing to MQTT.
+        Unified command dispatcher.
+        Enforces firmware rules before publishing to MQTT.
         """
 
-        # 1. Validate command existence
+        # -------------------------------------------------
+        # 1. Validate command
+        # -------------------------------------------------
         if command_req.command not in COMMAND_DEFINITIONS:
             raise HTTPException(
                 status_code=400,
@@ -25,58 +30,47 @@ class CommandController:
 
         definition = COMMAND_DEFINITIONS[command_req.command]
 
+        # -------------------------------------------------
         # 2. Command-specific validation
+        # -------------------------------------------------
 
-        # ---- GEOFENCE VALIDATION ----
+        # ---- GEOFENCE ----
         if command_req.command == "SET_GEOFENCE":
             geo = command_req.params.get("geofence_number")
-            geo_id = command_req.params.get("geofence_id")
             coords = command_req.params.get("coordinates")
 
             if geo not in {"GEO1", "GEO2", "GEO3"}:
                 raise HTTPException(
-                    status_code=400,
-                    detail="Invalid geofence_number. Allowed values: GEO1, GEO2, GEO3"
+                    400,
+                    "Invalid geofence_number (GEO1, GEO2, GEO3 only)"
                 )
 
-            if not isinstance(coords, list):
+            if not isinstance(coords, list) or len(coords) != 5:
                 raise HTTPException(
-                    status_code=400,
-                    detail="coordinates must be a list"
+                    400,
+                    "Firmware requires exactly 5 coordinates per geofence"
                 )
 
-            if len(coords) != 5:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Firmware requires exactly 5 coordinates per geofence"
-                )
-
-            for idx, point in enumerate(coords):
-                if not isinstance(point, dict):
+            for i, p in enumerate(coords):
+                if "latitude" not in p or "longitude" not in p:
                     raise HTTPException(
-                        status_code=400,
-                        detail=f"Invalid coordinate format at index {idx}"
+                        400,
+                        f"Invalid coordinate at index {i}"
                     )
 
-                if "latitude" not in point or "longitude" not in point:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Coordinate at index {idx} must contain latitude and longitude"
-                    )
-
-        # ---- CONTACTS VALIDATION ----
+        # ---- CONTACTS ----
         if command_req.command == "SET_CONTACTS":
-            for field in ("phonenum1", "phonenum2", "controlroomnum"):
-                val = command_req.params.get(field)
-                if not val or not str(val).isdigit():
+            for k in ("phonenum1", "phonenum2", "controlroomnum"):
+                v = command_req.params.get(k)
+                if not v or not str(v).isdigit():
                     raise HTTPException(
-                        status_code=400,
-                        detail=f"{field} must be a numeric string"
+                        400,
+                        f"{k} must be numeric"
                     )
 
-        # ---- DEVICE SETTINGS VALIDATION ----
+        # ---- DEVICE SETTINGS ----
         if command_req.command == "DEVICE_SETTINGS":
-            required_fields = {
+            required = {
                 "NormalSendingInterval",
                 "SOSSendingInterval",
                 "NormalScanningInterval",
@@ -85,22 +79,34 @@ class CommandController:
                 "SpeedLimit",
                 "LowbatLimit"
             }
-
-            missing = required_fields - command_req.params.keys()
+            missing = required - command_req.params.keys()
             if missing:
                 raise HTTPException(
-                    status_code=400,
-                    detail=f"Missing device setting fields: {', '.join(missing)}"
+                    400,
+                    f"Missing fields: {', '.join(missing)}"
                 )
 
-        # 3. Build MQTT payload
+        # ---- FOTA ----
+        if command_req.command == "FOTA_UPDATE":
+            for k in ("FOTA", "CRC", "size", "vc"):
+                if k not in command_req.params:
+                    raise HTTPException(
+                        400,
+                        f"Missing FOTA field: {k}"
+                    )
+
+        # -------------------------------------------------
+        # 3. Build payload
+        # -------------------------------------------------
         payload = definition["payload"].copy()
         payload.update(command_req.params)
 
         topic = f"{command_req.imei}/sub"
         qos = definition["qos"]
 
-        # 4. Publish to MQTT
+        # -------------------------------------------------
+        # 4. Publish MQTT
+        # -------------------------------------------------
         try:
             mqtt_connector.client.publish(
                 topic,
@@ -109,11 +115,13 @@ class CommandController:
             )
         except Exception as e:
             raise HTTPException(
-                status_code=500,
-                detail=f"MQTT publish failed: {str(e)}"
+                500,
+                f"MQTT publish failed: {str(e)}"
             )
 
+        # -------------------------------------------------
         # 5. Persist command
+        # -------------------------------------------------
         db = get_db()
         cmd = DeviceCommand(
             imei=command_req.imei,
@@ -125,12 +133,13 @@ class CommandController:
         )
         await db.save(cmd)
 
-        # 6. API Response
+        # -------------------------------------------------
+        # 6. API response
+        # -------------------------------------------------
         return {
             "message": (
-                "Command sent successfully "
-                "(no device ACK expected for this command)"
-                if not definition.get("expects_ack")
+                "Command sent successfully (no device ACK expected)"
+                if not definition["expects_ack"]
                 else "Command sent successfully"
             ),
             "imei": command_req.imei,
