@@ -1,11 +1,11 @@
-# app/models/CommandRequest.py
+from typing import Dict, Any
+from pydantic import BaseModel, Field, validator, constr
 
-from pydantic import BaseModel, Field, validator
 
 class CommandRequest(BaseModel):
     imei: str = Field(..., min_length=15, max_length=15)
-    command: str
-    params: dict = {}
+    command: constr(strip_whitespace=True, min_length=1)
+    params: Dict[str, Any] = Field(default_factory=dict)
 
     @validator("imei")
     def validate_imei(cls, v):

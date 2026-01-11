@@ -1,14 +1,15 @@
-# app/models/DeviceCommand.py
-
 from odmantic import Model
 from datetime import datetime
-from typing import Optional
+from typing import Dict, Any, Optional
 
 class DeviceCommand(Model):
     imei: str
     command: str
-    payload: dict
+    payload: Dict[str, Any]
     qos: int
-    status: str  # SENT, DELIVERED, EXECUTED, FAILED, TIMEOUT
-    created_at: datetime = datetime.utcnow()
+    status: str  # SENT | DELIVERED | FAILED
+    created_at: datetime
     updated_at: Optional[datetime] = None
+
+    class Config:
+        collection = "device_commands"
