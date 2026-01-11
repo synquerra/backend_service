@@ -11,5 +11,6 @@ class DeviceCommand(Model):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
-    class Config:
-        collection = "device_commands"
+    model_config = {
+        "collection": "device_commands"
+    }
