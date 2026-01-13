@@ -20,6 +20,7 @@ class SigninResponse:
     middle_name: str
     last_name: str
     email: str
+    imei: str
     mobile: str
     tokens: TokenType
     is_email_verified: bool
@@ -51,6 +52,7 @@ class Mutation:
             middle_name=parsed["middle_name"],
             last_name=parsed["last_name"],
             email=parsed["email"],
+            imei= parsed["imei"],
             mobile=parsed["mobile"],
             tokens=TokenType(**parsed["tokens"]),
             is_email_verified=parsed["is_email_verified"],

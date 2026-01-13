@@ -21,6 +21,7 @@ class User(Model):
     # Contact Info
     EMAIL: str = Field(..., unique=True)
     MOBILE: str = Field(..., unique=True)
+    IMEI: str
 
     # Authentication
     PASSWORD: str
