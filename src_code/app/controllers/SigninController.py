@@ -79,6 +79,7 @@ class SigninController:
                         "last_name": user.LAST_NAME,
                         "email": masked_email,
                         "imei": user.IMEI,
+                        "user_type": user.USER_TYPE,
                         "mobile": masked_mobile,
                         "tokens": tokens,
                         "is_email_verified": getattr(user, "IS_EMAIL_VERIFIED", False),

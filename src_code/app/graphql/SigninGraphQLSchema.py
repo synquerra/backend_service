@@ -1,10 +1,10 @@
 import json
 import strawberry
-from strawberry.exceptions import GraphQLError
 from fastapi import Request
+from strawberry.exceptions import GraphQLError
 from app.routes.SigninRoutes import signin_user
-from app.controllers.SigninController import SigninRequest
 from app.helpers.ErrorMessages import ErrorMessages
+from app.controllers.SigninController import SigninRequest
 
 @strawberry.type
 class TokenType:
@@ -21,6 +21,7 @@ class SigninResponse:
     last_name: str
     email: str
     imei: str
+    user_type: str
     mobile: str
     tokens: TokenType
     is_email_verified: bool
@@ -53,6 +54,7 @@ class Mutation:
             last_name=parsed["last_name"],
             email=parsed["email"],
             imei= parsed["imei"],
+            user_type= parsed["user_type"],
             mobile=parsed["mobile"],
             tokens=TokenType(**parsed["tokens"]),
             is_email_verified=parsed["is_email_verified"],
