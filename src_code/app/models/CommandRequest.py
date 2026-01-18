@@ -12,3 +12,9 @@ class CommandRequest(BaseModel):
         if not v.isdigit():
             raise ValueError("IMEI must be numeric")
         return v
+
+    @validator("params")
+    def validate_params(cls, v):
+        if not isinstance(v, dict):
+            raise ValueError("params must be object")
+        return v
