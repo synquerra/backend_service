@@ -1,13 +1,15 @@
 # app/controllers/CommandController.py
 
 import json
-from datetime import datetime
-from fastapi import HTTPException
 from app.models import get_db
+from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
+from fastapi import HTTPException
 from app.models.DeviceCommand import DeviceCommand
 from app.libraries.MqttConnector import mqtt_connector
 from app.constants.CommandDefinitions import COMMAND_DEFINITIONS
 
+IST = ZoneInfo("Asia/Kolkata")
 
 class CommandController:
 
@@ -40,20 +42,28 @@ class CommandController:
         if result.rc != 0:
             raise HTTPException(500, "MQTT publish failed")
 
+        created_at_ist = (
+            datetime.now(timezone.utc)
+            .astimezone(IST)
+            .replace(tzinfo=None)
+        )
+
         db = get_db()
         await db.save(DeviceCommand(
             imei=command_req.imei,
             command=command_req.command,
             payload=payload,
             qos=qos,
-            status="SENT",  # NOT DELIVERED
-            created_at=datetime.utcnow()
+            status="PUBLISHED",  # NOT DELIVERED
+            created_at=created_at_ist,
+            updated_at=None
         ))
 
         return {
             "status": "SENT",
-            "note": "Device executes command silently as per firmware",
+            "note": "Command published to broker; device execution not confirmed",
             "imei": command_req.imei,
             "command": command_req.command,
-            "qos": qos
+            "qos": qos,
+            "created_at": created_at_ist.isoformat()
         }

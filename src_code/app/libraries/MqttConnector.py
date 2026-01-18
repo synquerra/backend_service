@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class MqttConnector:
     def __init__(self):
-        self.client = mqtt.Client(client_id=f"api-{settings.APP_NAME}", clean_session=True)
+        self.client = mqtt.Client(client_id=f"api-{settings.APP_NAME}", clean_session=False)
 
         if settings.MQTT_USERNAME and settings.MQTT_PASSWORD:
             self.client.username_pw_set(settings.MQTT_USERNAME, settings.MQTT_PASSWORD)
