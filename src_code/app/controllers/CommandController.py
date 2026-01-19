@@ -1,10 +1,12 @@
 # app/controllers/CommandController.py
 
 import json
+import logging
 from app.models import get_db
 from zoneinfo import ZoneInfo
-from datetime import datetime, timezone
 from fastapi import HTTPException
+from datetime import datetime, timezone
+from app.models.GeofenceData import GeofenceData
 from app.models.DeviceCommand import DeviceCommand
 from app.libraries.MqttConnector import mqtt_connector
 from app.constants.CommandDefinitions import COMMAND_DEFINITIONS
@@ -28,10 +30,24 @@ class CommandController:
                 if not v or not str(v).isdigit():
                     raise HTTPException(400, f"{k} must be numeric")
 
-        payload = {**definition["payload"], **command_req.params}
+        # BASIC validation for SET_GEOFENCE (you were missing this)
+        if command_req.command == "SET_GEOFENCE":
+            required_keys = ("geofence_number", "geofence_id", "coordinates")
+            for k in required_keys:
+                if k not in command_req.params:
+                    raise HTTPException(400, f"{k} is required")
 
+            if not isinstance(command_req.params["coordinates"], list) or len(command_req.params["coordinates"]) < 3:
+                raise HTTPException(400, "coordinates must contain at least 3 points")
+
+        payload = {**definition["payload"], **command_req.params}
         topic = f"{command_req.imei}/sub"
         qos = definition["qos"]
+
+        client = mqtt_connector.client
+        if not client.is_connected():
+            logger.error("MQTT client not connected (imei=%s)", command_req.imei)
+            raise HTTPException(503, "MQTT broker not connected")
 
         result = mqtt_connector.client.publish(
             topic,
@@ -40,24 +56,26 @@ class CommandController:
         )
 
         if result.rc != 0:
-            raise HTTPException(500, "MQTT publish failed")
+            logger.error("MQTT publish failed rc=%s imei=%s topic=%s", result.rc, command_req.imei, topic)
+            raise HTTPException(500, f"MQTT publish failed rc={result.rc}")
 
-        created_at_ist = (
-            datetime.now(timezone.utc)
-            .astimezone(IST)
-            .replace(tzinfo=None)
-        )
+        created_at_ist = (datetime.now(timezone.utc).astimezone(IST).replace(tzinfo=None))
 
         db = get_db()
+
         await db.save(DeviceCommand(
             imei=command_req.imei,
             command=command_req.command,
             payload=payload,
             qos=qos,
-            status="PUBLISHED",  # NOT DELIVERED
+            status="PUBLISHED",
             created_at=created_at_ist,
             updated_at=None
         ))
+
+        # 🔥 SAVE GEOFENCE DATA ON SUCCESSFUL API RESPONSE
+        if command_req.command == "SET_GEOFENCE":
+            await db.save(GeofenceData(imei=command_req.imei, geofence_number=command_req.params["geofence_number"], geofence_id=command_req.params["geofence_id"], coordinates=command_req.params["coordinates"], created_at=created_at_ist))
 
         return {
             "status": "SENT",
