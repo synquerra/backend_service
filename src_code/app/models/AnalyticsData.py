@@ -31,6 +31,7 @@ class AnalyticsData(Model):
     raw_imei: Optional[str] = None
     raw_Alert: Optional[str] = None
     raw_temperature: Optional[str] = None
+    raw_raw_body: Optional[str] = None
 
     model_config = {
         "collection": "analytics_data",
