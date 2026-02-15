@@ -29,6 +29,8 @@ def serialize_device(record):
         "imei": data.get("imei"),
         "interval": data.get("interval"),
         "geoid": data.get("Geoid"),   # USE EXACT DB FIELD
+        "student_name": data.get("student_name"),
+        "student_id": data.get("student_id"),
         "createdAt": created_stripped,
     }
 

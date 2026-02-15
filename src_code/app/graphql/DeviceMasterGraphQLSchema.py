@@ -24,6 +24,8 @@ def convert_device(record: dict):
         "interval": record.get("interval"),
         "geoid": record.get("geoid"),
         "createdAt": created_stripped,
+        "studentName": record.get("student_name"),
+        "studentId": record.get("student_id"),
     }
 
 
@@ -34,6 +36,8 @@ class DeviceType:
     interval: int | None
     geoid: str | None
     createdAt: str | None
+    studentName: str | None
+    studentId: str | None
 
 
 @strawberry.type

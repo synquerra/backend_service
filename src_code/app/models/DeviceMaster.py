@@ -10,6 +10,8 @@ class DeviceMaster(Model):
     interval: Optional[int] = None
     Geoid: Optional[str] = None
     created_at: Optional[datetime] = None
+    student_name: Optional[str] = None
+    student_id: Optional[str] = None
 
     model_config = {
         "collection": "devices_master"
