@@ -170,7 +170,9 @@ class AnalyticsDataType:
     rawLongitude: str | None
     rawInterval: str | None
     rawBody: str | None
-
+    rawPhone1: str | None
+    rawPhone2: str | None
+    rawControlPhone: str | None
     type: str | None
 
 
@@ -299,6 +301,26 @@ class Query:
     @strawberry.field
     async def analyticsDataByTopic(self, topic: str) -> list[AnalyticsDataType]:
         recs = await get_db().find(AnalyticsData, {"topic": topic})
+        return [AnalyticsDataType(**serialize(r)) for r in recs]
+
+    @strawberry.field
+    async def analyticsDataByFilter(self, imei: str | None = None, type: str | None = None) -> list[AnalyticsDataType]:
+
+        db = get_db()
+        query = {}
+
+        if imei:
+            query["imei"] = imei
+
+        if type:
+            query["type"] = type
+
+        query["raw_phonenum1"] = {"$nin": [None, ""]}
+        query["raw_phonenum2"] = {"$nin": [None, ""]}
+        query["raw_controlroomnum"] = {"$nin": [None, ""]}
+
+        recs = await db.find(AnalyticsData, query, sort=AnalyticsData.device_timestamp.desc())
+
         return [AnalyticsDataType(**serialize(r)) for r in recs]
 
     @strawberry.field

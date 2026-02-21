@@ -69,7 +69,9 @@ def serialize(rec: AnalyticsData):
         "rawLongitude": d.get("raw_longitude"),
         "rawInterval": d.get("raw_interval"),
         "rawBody": d.get("raw_body"),
-
+        "rawPhone1": d.get("raw_phonenum1"),
+        "rawPhone2": d.get("raw_phonenum2"),
+        "rawControlPhone": d.get("raw_controlroomnum"),
         "type": d.get("type"),
     }
 

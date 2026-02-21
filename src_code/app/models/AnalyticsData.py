@@ -1,4 +1,4 @@
-from odmantic import Model
+from odmantic import Model, Field
 from typing import Optional
 from datetime import datetime
 
@@ -31,7 +31,10 @@ class AnalyticsData(Model):
     raw_imei: Optional[str] = None
     raw_Alert: Optional[str] = None
     raw_temperature: Optional[str] = None
-    raw_raw_body: Optional[str] = None
+    raw_body: Optional[str] = None
+    raw_phonenum1: Optional[str] = None
+    raw_phonenum2: Optional[str] = None
+    raw_controlroomnum: Optional[str] = None
 
     model_config = {
         "collection": "analytics_data",
