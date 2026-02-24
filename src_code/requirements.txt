@@ -23,7 +23,7 @@ odmantic==1.0.2
 pyzipper==0.3.6
 pandas
 boto3
-strawberry-graphql
+strawberry-graphql==0.287.2
 jinja2
 python-jose[cryptography]
 slowapi==0.1.9

@@ -1,7 +1,6 @@
 import json
 import strawberry
 from fastapi import Request
-from strawberry.types import Info
 from strawberry.exceptions import GraphQLError
 from app.routes.SigninRoutes import signin_user
 from app.helpers.ErrorMessages import ErrorMessages
@@ -38,7 +37,7 @@ class SigninInput:
 @strawberry.type
 class Mutation:
     @strawberry.mutation
-    async def signin(self, input: SigninInput, info: Info) -> SigninResponse:
+    async def signin(self, input: SigninInput, info) -> SigninResponse:
         request: Request = info.context["request"]
         payload = SigninRequest(**input.__dict__)
         response = await signin_user(payload, request)
