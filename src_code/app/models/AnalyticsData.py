@@ -35,6 +35,13 @@ class AnalyticsData(Model):
     raw_phonenum1: Optional[str] = None
     raw_phonenum2: Optional[str] = None
     raw_controlroomnum: Optional[str] = None
+    raw_NormalSendingInterval: Optional[str] = None
+    raw_SOSSendingInterval: Optional[str] = None
+    raw_NormalScanningInterval: Optional[str] = None
+    raw_AirplaneInterval: Optional[str] = None
+    raw_SpeedLimit: Optional[str] = None
+    raw_LowbatLimit: Optional[str] = None
+
 
     model_config = {
         "collection": "analytics_data",

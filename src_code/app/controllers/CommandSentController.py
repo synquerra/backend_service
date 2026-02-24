@@ -1,11 +1,12 @@
 from app.models import get_db
-from app.models.DeviceCommand import DeviceCommand
 from fastapi import HTTPException
+from app.models.DeviceCommand import DeviceCommand
+
 
 class CommandSentController:
 
     @staticmethod
-    async def list_by_imei(imei: str, limit: int = 50):
+    async def list_by_imei(imei: str, limit: int = 1000):
         db = get_db()
 
         return await db.find(

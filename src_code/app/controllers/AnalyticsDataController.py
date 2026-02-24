@@ -72,6 +72,12 @@ def serialize(rec: AnalyticsData):
         "rawPhone1": d.get("raw_phonenum1"),
         "rawPhone2": d.get("raw_phonenum2"),
         "rawControlPhone": d.get("raw_controlroomnum"),
+        "rawNormalSendingInterval": d.get("raw_NormalSendingInterval"),
+        "rawSOSSendingInterval": d.get("raw_SOSSendingInterval"),
+        "rawNormalScanningInterval": d.get("raw_NormalScanningInterval"),
+        "rawAirplaneInterval": d.get("raw_AirplaneInterval"),
+        "rawSpeedLimit": d.get("raw_SpeedLimit"),
+        "rawLowbatLimit": d.get("raw_LowbatLimit"),
         "type": d.get("type"),
     }
 

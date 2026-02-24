@@ -173,6 +173,12 @@ class AnalyticsDataType:
     rawPhone1: str | None
     rawPhone2: str | None
     rawControlPhone: str | None
+    rawNormalSendingInterval: str | None
+    rawSOSSendingInterval: str | None
+    rawNormalScanningInterval: str | None
+    rawAirplaneInterval: str | None
+    rawSpeedLimit: str | None
+    rawLowbatLimit: str | None
     type: str | None
 
 

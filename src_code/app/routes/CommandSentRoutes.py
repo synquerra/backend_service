@@ -7,7 +7,7 @@ router = APIRouter()
 @router.get("/{imei}")
 async def get_commands(
     imei: str,
-    limit: int = Query(5, le=10)
+    limit: int = Query(5, le=1000)
 ):
     return await CommandSentController.list_by_imei(imei, limit)
 
