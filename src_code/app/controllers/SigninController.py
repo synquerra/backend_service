@@ -1,15 +1,23 @@
 from fastapi import Request
 from app.models import get_db
 from app.models.User import User
+from pydantic import BaseModel, Field
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from fastapi.responses import JSONResponse
 from app.helpers.ErrorCodes import ErrorCodes
 from app.helpers.JWTManager import JWTManager
-from pydantic import BaseModel, Field
 from app.helpers.ErrorMessages import ErrorMessages
 from app.controllers.APIResponse import APIResponse
 from app.helpers.ValidationHelper import ValidationHelper
+
+pwd_context = CryptContext(
+    schemes=["argon2"],
+    deprecated="auto",
+    argon2__rounds=2,
+    argon2__memory_cost=12288,
+    argon2__parallelism=1
+)
 
 def now_ist():
     return datetime.utcnow() + timedelta(hours=5, minutes=30)
@@ -22,14 +30,6 @@ class SigninRequest(BaseModel):
         extra = "forbid"
 
 class SigninController:
-    def __init__(self):
-        self.pwd_context = CryptContext(
-            schemes=["argon2"],
-            deprecated="auto",
-            argon2__rounds=3,
-            argon2__memory_cost=102400,
-            argon2__parallelism=8
-        )
 
     async def login_user(self, payload: SigninRequest, request: Request):
         db = get_db()
@@ -39,31 +39,24 @@ class SigninController:
 
             user = await db.find_one(User, {"EMAIL": email})
             if not user:
-                return JSONResponse(
-                    content=APIResponse.error(msg=ErrorMessages.LOGIN_FAILED, code=ErrorCodes.UNAUTHORIZED),
-                    status_code=ErrorCodes.UNAUTHORIZED
-                )
+                return JSONResponse(content=APIResponse.error(msg=ErrorMessages.LOGIN_FAILED, code=ErrorCodes.UNAUTHORIZED), status_code=ErrorCodes.UNAUTHORIZED)
 
-            if not self.pwd_context.verify(password, user.PASSWORD):
-                return JSONResponse(
-                    content=APIResponse.error(msg=ErrorMessages.LOGIN_FAILED, code=ErrorCodes.UNAUTHORIZED),
-                    status_code=ErrorCodes.UNAUTHORIZED
-                )
+            if not pwd_context.verify(password, user.PASSWORD):
+                return JSONResponse(content=APIResponse.error(msg=ErrorMessages.LOGIN_FAILED, code=ErrorCodes.UNAUTHORIZED), status_code=ErrorCodes.UNAUTHORIZED)
 
-            if self.pwd_context.needs_update(user.PASSWORD):
-                user.PASSWORD = self.pwd_context.hash(password)
-                await db.save(user)
+            if not getattr(user, "IS_ACTIVE", True):
+                return JSONResponse(content=APIResponse.error(msg="User account is inactive. Please contact support.", code=ErrorCodes.UNAUTHORIZED), status_code=ErrorCodes.UNAUTHORIZED)
 
-            if getattr(user, "IS_ACTIVE", True) is False:
-                return JSONResponse(
-                    content=APIResponse.error(msg="User account is inactive. Please contact support.", code=ErrorCodes.UNAUTHORIZED),
-                    status_code=ErrorCodes.UNAUTHORIZED
-                )
-
-            user.LAST_LOGIN_AT = now_ist()
-            user.REGISTERED_IP = request.client.host if request.client else "unknown"
-            user.USER_AGENT = request.headers.get("user-agent", "unknown")
-            await db.save(user)
+            await db.get_collection(User).update_one(
+                {"_id": user.id},
+                {
+                    "$set": {
+                        "LAST_LOGIN_AT": now_ist(),
+                        "REGISTERED_IP": request.client.host if request.client else "unknown",
+                        "USER_AGENT": request.headers.get("user-agent", "unknown")
+                    }
+                }
+            )
 
             tokens = JWTManager.create_tokens(user.UNIQUE_ID, user.EMAIL)
             masked_email = ValidationHelper.mask_email(user.EMAIL)
@@ -91,7 +84,4 @@ class SigninController:
             )
 
         except Exception as e:
-            return JSONResponse(
-                content=APIResponse.error(msg=f"Unexpected error while signing in: {str(e)}", code=ErrorCodes.INTERNAL_SERVER_ERROR),
-                status_code=ErrorCodes.INTERNAL_SERVER_ERROR
-            )
+            return JSONResponse(content=APIResponse.error(msg=f"Unexpected error while signing in: {str(e)}", code=ErrorCodes.INTERNAL_SERVER_ERROR), status_code=ErrorCodes.INTERNAL_SERVER_ERROR)

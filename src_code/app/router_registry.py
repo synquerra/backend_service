@@ -6,6 +6,7 @@ from app.routes.CommandRoutes import router as command_router
 from app.routes.CommandSentRoutes import router as command_sent_router
 from app.routes.CommandResponseRoutes import router as command_response_router
 from app.routes.GeofenceRoutes import router as genofence_router
+from app.routes.SigninRoutes import router as signin
 
 router_registry = []
 
@@ -17,5 +18,6 @@ router_registry += [
     {"router": command_router, "prefix": "", "tags": ["Query Command"], "include_in_schema": True},
     {"router": command_sent_router, "prefix": "", "tags": ["Query Command"], "include_in_schema": True},
     {"router": command_response_router, "prefix": "", "tags": ["Query Command"], "include_in_schema": True},
-    {"router": genofence_router, "prefix": "", "tags": ["Genofence Data"], "include_in_schema": True}
+    {"router": genofence_router, "prefix": "", "tags": ["Genofence Data"], "include_in_schema": True},
+    {"router": signin, "prefix": "/auth", "tags": ["Signin"], "include_in_schema": True},
 ]
