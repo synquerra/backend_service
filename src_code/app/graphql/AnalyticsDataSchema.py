@@ -306,8 +306,9 @@ class Query:
         return AnalyticsDataType(**serialize(rec)) if rec else None
 
     @strawberry.field
-    async def analyticsDataByTopic(self, topic: str) -> list[AnalyticsDataType]:
-        recs = await get_db().find(AnalyticsData, {"topic": topic})
+    async def analyticsDataByTopic(self, topic: str, limit: int = 1000) -> list[AnalyticsDataType]:
+        db = get_db()
+        recs = await db.find(AnalyticsData, {"topic": topic}, sort=AnalyticsData.device_timestamp.desc(), limit=limit)
         return [AnalyticsDataType(**serialize(r)) for r in recs]
 
     @strawberry.field
