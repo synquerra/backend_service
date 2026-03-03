@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Request, Body
+from app.models import get_db
+from fastapi import APIRouter, Body
 from fastapi.responses import JSONResponse
 from app.graphql.AnalyticsDataSchema import schema
 from app.controllers.APIResponse import APIResponse
@@ -11,7 +12,7 @@ async def analytics_graph_query(payload: dict = Body(...)):
     if not query:
         return JSONResponse(APIResponse.error("Missing GraphQL query", 400), 400)
 
-    result = await schema.execute(query)
+    result = await schema.execute(query, context_value={"db": get_db()})
 
     if result.errors:
         return JSONResponse(APIResponse.error(str(result.errors[0]), 500), 500)

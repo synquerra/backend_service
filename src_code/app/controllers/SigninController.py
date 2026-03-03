@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import Request
 from app.models import get_db
 from app.models.User import User
@@ -11,20 +12,14 @@ from app.helpers.ErrorMessages import ErrorMessages
 from app.controllers.APIResponse import APIResponse
 from app.helpers.ValidationHelper import ValidationHelper
 
-pwd_context = CryptContext(
-    schemes=["argon2"],
-    deprecated="auto",
-    argon2__rounds=2,
-    argon2__memory_cost=12288,
-    argon2__parallelism=1
-)
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto", argon2__rounds=2, argon2__memory_cost=12288, argon2__parallelism=1)
 
 def now_ist():
     return datetime.utcnow() + timedelta(hours=5, minutes=30)
 
 class SigninRequest(BaseModel):
     email: str = Field(..., example="john@example.com")
-    password: str = Field(..., min_length=8, max_length=256, example="StrongPassword123!")
+    password: str = Field(..., min_length=8, max_length=256, example="StrongPassword")
 
     class Config:
         extra = "forbid"
@@ -47,41 +42,37 @@ class SigninController:
             if not getattr(user, "IS_ACTIVE", True):
                 return JSONResponse(content=APIResponse.error(msg="User account is inactive. Please contact support.", code=ErrorCodes.UNAUTHORIZED), status_code=ErrorCodes.UNAUTHORIZED)
 
-            await db.get_collection(User).update_one(
-                {"_id": user.id},
-                {
-                    "$set": {
-                        "LAST_LOGIN_AT": now_ist(),
-                        "REGISTERED_IP": request.client.host if request.client else "unknown",
-                        "USER_AGENT": request.headers.get("user-agent", "unknown")
+            async def update_last_login():
+                await db.get_collection(User).update_one(
+                    {"_id": user.id},
+                    {
+                        "$set": {
+                            "LAST_LOGIN_AT": now_ist(),
+                            "REGISTERED_IP": request.client.host if request.client else "unknown",
+                            "USER_AGENT": request.headers.get("user-agent", "unknown")
+                        }
                     }
-                }
-            )
+                )
+
+            asyncio.create_task(update_last_login())
 
             tokens = JWTManager.create_tokens(user.UNIQUE_ID, user.EMAIL)
-            masked_email = ValidationHelper.mask_email(user.EMAIL)
-            masked_mobile = ValidationHelper.mask_mobile(user.MOBILE)
 
-            return JSONResponse(
-                content=APIResponse.success(
-                    msg=ErrorMessages.LOGIN_SUCCESS,
+            return JSONResponse(content=APIResponse.success(msg=ErrorMessages.LOGIN_SUCCESS,
                     data={
                         "unique_id": user.UNIQUE_ID,
                         "first_name": user.FIRST_NAME,
                         "middle_name": getattr(user, "MIDDLE_NAME", ""),
                         "last_name": user.LAST_NAME,
-                        "email": masked_email,
+                        "email": ValidationHelper.mask_email(user.EMAIL),
                         "imei": user.IMEI,
                         "user_type": user.USER_TYPE,
-                        "mobile": masked_mobile,
+                        "mobile": ValidationHelper.mask_mobile(user.MOBILE),
                         "tokens": tokens,
                         "is_email_verified": getattr(user, "IS_EMAIL_VERIFIED", False),
                         "is_mobile_verified": getattr(user, "IS_MOBILE_VERIFIED", False),
                         "last_login_at": user.LAST_LOGIN_AT.strftime("%Y-%m-%d %H:%M:%S") if user.LAST_LOGIN_AT else None
-                    }
-                ),
-                status_code=ErrorCodes.SUCCESS
-            )
+                    }), status_code=ErrorCodes.SUCCESS)
 
         except Exception as e:
             return JSONResponse(content=APIResponse.error(msg=f"Unexpected error while signing in: {str(e)}", code=ErrorCodes.INTERNAL_SERVER_ERROR), status_code=ErrorCodes.INTERNAL_SERVER_ERROR)
