@@ -310,7 +310,23 @@ class Query:
         db = get_db()
         recs = await db.find(AnalyticsData, {"topic": topic}, sort=AnalyticsData.device_timestamp.desc(), limit=limit)
         return [AnalyticsDataType(**serialize(r)) for r in recs]
-
+    
+    @strawberry.field
+    async def latestAnalyticsData(self, imei: str) -> AnalyticsDataType | None:
+        db = get_db()
+    
+        recs = await db.find(
+            AnalyticsData,
+            {"imei": imei},
+            sort=AnalyticsData.device_timestamp.desc(),
+            limit=1
+        )
+    
+        if not recs:
+            return None
+    
+        return AnalyticsDataType(**serialize(recs[0]))
+    
     @strawberry.field
     async def analyticsDataByFilter(self, imei: str | None = None, type: str | None = None) -> list[AnalyticsDataType]:
 
