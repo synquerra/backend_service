@@ -55,7 +55,7 @@ async def compute_distance_last_24_hours(db, imei):
     now_ist = datetime.now(timezone.utc).astimezone(IST)
     cutoff = now_ist - timedelta(hours=24)
 
-    recs = await db.find(AnalyticsData, {"imei": imei})
+    recs = await db.find(AnalyticsData, {"imei": imei, "device_timestamp": {"$gte": cutoff}}, sort=AnalyticsData.device_timestamp.asc())
     if not recs:
         return []
 
@@ -293,7 +293,8 @@ class Query:
 
     @strawberry.field
     async def analyticsData(self) -> list[AnalyticsDataType]:
-        recs = await get_db().find(AnalyticsData)
+        db = get_db()
+        recs = await db.find(AnalyticsData, sort=AnalyticsData.device_timestamp.desc(), limit=500)
         return [AnalyticsDataType(**serialize(r)) for r in recs]
 
     @strawberry.field
@@ -305,8 +306,9 @@ class Query:
         return AnalyticsDataType(**serialize(rec)) if rec else None
 
     @strawberry.field
-    async def analyticsDataByTopic(self, topic: str) -> list[AnalyticsDataType]:
-        recs = await get_db().find(AnalyticsData, {"topic": topic})
+    async def analyticsDataByTopic(self, topic: str, limit: int = 1000) -> list[AnalyticsDataType]:
+        db = get_db()
+        recs = await db.find(AnalyticsData, {"topic": topic}, sort=AnalyticsData.device_timestamp.desc(), limit=limit)
         return [AnalyticsDataType(**serialize(r)) for r in recs]
     
     @strawberry.field
@@ -341,20 +343,20 @@ class Query:
         query["raw_phonenum2"] = {"$nin": [None, ""]}
         query["raw_controlroomnum"] = {"$nin": [None, ""]}
 
-        recs = await db.find(AnalyticsData, query, sort=AnalyticsData.device_timestamp.desc())
-
+        recs = await db.find(AnalyticsData, query, sort=AnalyticsData.device_timestamp.desc(), limit=500)
         return [AnalyticsDataType(**serialize(r)) for r in recs]
 
     @strawberry.field
     async def analyticsDataByImei(self, imei: str) -> list[AnalyticsDataType]:
-        recs = await get_db().find(AnalyticsData, {"imei": imei})
+        db = get_db()
+        recs = await db.find(AnalyticsData, {"imei": imei}, sort=AnalyticsData.device_timestamp.desc(), limit=500)
         return [AnalyticsDataType(**serialize(r)) for r in recs]
 
     @strawberry.field
     async def analyticsDataPaginated(self, skip: int, limit: int) -> list[AnalyticsDataType]:
-        recs = await get_db().find(AnalyticsData)
-        sliced = recs[skip:skip + limit]
-        return [AnalyticsDataType(**serialize(r)) for r in sliced]
+        db = get_db()
+        recs = await db.find(AnalyticsData, sort=AnalyticsData.device_timestamp.desc(), skip=skip, limit=limit)
+        return [AnalyticsDataType(**serialize(r)) for r in recs]
 
     @strawberry.field
     async def analyticsDataCount(self) -> int:
@@ -369,7 +371,9 @@ class Query:
     @strawberry.field
     async def analyticsHealth(self, imei: str) -> AnalyticsHealthType:
         # Fetch model objects
-        recs = await get_db().find(AnalyticsData, {"imei": imei})
+        db = get_db()
+
+        recs = await db.find(AnalyticsData, {"imei": imei}, sort=AnalyticsData.device_timestamp.desc(), limit=200)
 
         if not recs:
             return AnalyticsHealthType(
@@ -418,7 +422,12 @@ class Query:
 
     @strawberry.field
     async def analyticsUptime(self, imei: str) -> UptimeAnalyticsType:
-        recs = await get_db().find(AnalyticsData, {"imei": imei})
+        db = get_db()
+
+        now = datetime.now(timezone.utc).astimezone(IST)
+        cutoff = now - timedelta(hours=24)
+
+        recs = await db.find(AnalyticsData, {"imei": imei, "device_timestamp": {"$gte": cutoff}}, sort=AnalyticsData.device_timestamp.asc())
 
         # Sort newest → oldest by device_timestamp or raw timestamp
         def extract_ts(obj):

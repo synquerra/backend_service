@@ -20,7 +20,8 @@ async def graphql_signin_query(request: Request, payload: dict = Body(...)):
 
     if result.errors:
         error_msg = str(result.errors[0].message)
-        if "Invalid email or password" or "login failed" in error_msg.lower() or "inactive" in error_msg.lower():
+        if ("invalid email or password" in error_msg.lower() or "login failed" in error_msg.lower() or
+                "inactive" in error_msg.lower()):
             return JSONResponse(
                 content=APIResponse.error(msg=error_msg, code=ErrorCodes.UNAUTHORIZED),
                 status_code=ErrorCodes.UNAUTHORIZED

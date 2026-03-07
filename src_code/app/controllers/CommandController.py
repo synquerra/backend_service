@@ -37,23 +37,36 @@ class CommandController:
                 if k not in command_req.params:
                     raise HTTPException(400, f"{k} is required")
 
-            if not isinstance(command_req.params["coordinates"], list) or len(command_req.params["coordinates"]) < 3:
-                raise HTTPException(400, "coordinates must contain at least 3 points")
+            coordinates = command_req.params["coordinates"]
+            if not isinstance(coordinates, list):
+                raise HTTPException(400, "coordinates must be a list")
+
+            if len(coordinates) != 5:
+                raise HTTPException(400, "coordinates must contain exactly 5 points")
+
+            # Validate each coordinate structure
+            for point in coordinates:
+
+                if not isinstance(point, dict):
+                    raise HTTPException(400, "each coordinate must be an object")
+
+                if "lat" not in point or "lng" not in point:
+                    raise HTTPException(400, "each coordinate must contain lat and lng")
+
+                if not isinstance(point["lat"], (int, float)) or not isinstance(point["lng"], (int, float)):
+                    raise HTTPException(400, "lat and lng must be numeric")
 
         payload = {**definition["payload"], **command_req.params}
         topic = f"{command_req.imei}/sub"
         qos = definition["qos"]
 
         client = mqtt_connector.client
+
         if not client.is_connected():
             logger.error("MQTT client not connected (imei=%s)", command_req.imei)
             raise HTTPException(503, "MQTT broker not connected")
 
-        result = mqtt_connector.client.publish(
-            topic,
-            json.dumps(payload),
-            qos=qos
-        )
+        result = mqtt_connector.client.publish(topic, json.dumps(payload), qos=qos)
 
         if result.rc != 0:
             logger.error("MQTT publish failed rc=%s imei=%s topic=%s", result.rc, command_req.imei, topic)
