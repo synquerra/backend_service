@@ -113,6 +113,12 @@ class Settings(BaseSettings):
     MQTT_PORT: int = 1883
     MQTT_USERNAME: str | None = None
     MQTT_PASSWORD: str | None = None
+
+    # Tata API
+    TATA_API_URL: str
+    TATA_API_KEY: str
+    TATA_INITIATOR_ID: str
+    TATA_COOKIE: str
     class Config:
         env_file = str(ENV_FILE)
         extra = "allow"

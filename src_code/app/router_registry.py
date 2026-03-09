@@ -1,3 +1,5 @@
+# app/router_registry.py
+
 from app.routes.SigninGraphQLRoute import router as signin_graphql_route
 from app.routes.SignupGraphQLRoute import router as signup_graphql_route
 from app.routes.DeviceMasterGraphQLRoute import router as device_master_graphql_router
@@ -7,6 +9,7 @@ from app.routes.CommandSentRoutes import router as command_sent_router
 from app.routes.CommandResponseRoutes import router as command_response_router
 from app.routes.GeofenceRoutes import router as genofence_router
 from app.routes.SigninRoutes import router as signin
+from app.routes.TataSubscriptionRoutes import router as tata_api_router
 
 router_registry = []
 
@@ -20,4 +23,5 @@ router_registry += [
     {"router": command_response_router, "prefix": "", "tags": ["Query Command"], "include_in_schema": True},
     {"router": genofence_router, "prefix": "", "tags": ["Genofence Data"], "include_in_schema": True},
     {"router": signin, "prefix": "/auth", "tags": ["Signin"], "include_in_schema": True},
+    {"router": tata_api_router, "prefix": "", "tags": ["Third Party Services"], "include_in_schema": True},
 ]
