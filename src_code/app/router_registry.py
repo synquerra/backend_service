@@ -10,6 +10,7 @@ from app.routes.CommandResponseRoutes import router as command_response_router
 from app.routes.GeofenceRoutes import router as genofence_router
 from app.routes.SigninRoutes import router as signin
 from app.routes.TataSubscriptionRoutes import router as tata_api_router
+from app.routes.SosRoutes import router as sos_router
 
 router_registry = []
 
@@ -24,4 +25,5 @@ router_registry += [
     {"router": genofence_router, "prefix": "", "tags": ["Genofence Data"], "include_in_schema": True},
     {"router": signin, "prefix": "/auth", "tags": ["Signin"], "include_in_schema": True},
     {"router": tata_api_router, "prefix": "", "tags": ["Third Party Services"], "include_in_schema": True},
+    {"router": sos_router, "prefix": "", "tags": ["SOS Notification"], "include_in_schema": False},
 ]

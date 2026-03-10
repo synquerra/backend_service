@@ -1,5 +1,6 @@
 # System imports
 import uvicorn
+import asyncio
 import redis.asyncio as redis
 from starlette.types import Scope
 from fastapi import FastAPI, Request
@@ -16,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.helpers.ErrorMessages import ErrorMessages
 from app.controllers.APIResponse import APIResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from app.services.SosWatcherService import watch_sos_events
 from fastapi.responses import JSONResponse, RedirectResponse
 from app.middleware.redis_rate_limiter import init_redis, redis_rate_limiter
 
@@ -128,6 +130,8 @@ client = None
 async def startup_event():
     global client
     client = HTTPClient()
+    # start SOS watcher
+    asyncio.create_task(watch_sos_events())
 
 
 # Health & Utility Endpoints
