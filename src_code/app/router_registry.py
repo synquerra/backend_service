@@ -24,6 +24,6 @@ router_registry += [
     {"router": command_response_router, "prefix": "", "tags": ["Query Command"], "include_in_schema": True},
     {"router": genofence_router, "prefix": "", "tags": ["Genofence Data"], "include_in_schema": True},
     {"router": signin, "prefix": "/auth", "tags": ["Signin"], "include_in_schema": True},
-    {"router": tata_api_router, "prefix": "", "tags": ["Third Party Services"], "include_in_schema": True},
+    {"router": tata_api_router, "prefix": "/tata", "tags": ["Tata API Services"], "include_in_schema": True},
     {"router": sos_router, "prefix": "", "tags": ["SOS Notification"], "include_in_schema": False},
 ]

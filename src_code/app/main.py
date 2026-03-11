@@ -31,7 +31,10 @@ async def lifespan(app: FastAPI):
     try:
         await init_redis()
     except Exception as e:
-        Logger.get_instance().log_warning({"message": f"Redis init failed: {e}"})    
+        Logger.get_instance().log_warning({"message": f"Redis init failed: {e}"})
+
+    # START SOS WATCHER HERE
+    asyncio.create_task(watch_sos_events())
     yield
     if getattr(app.state, "redis", None):
         await app.state.redis.close()
@@ -82,6 +85,10 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    await client.aclose()
 
 # Custom security headers middleware
 class CustomHeaderMiddleware(BaseHTTPMiddleware):

@@ -8,7 +8,6 @@ async def sos_socket(websocket: WebSocket):
 
     try:
         while True:
-            # keep connection alive
             await websocket.receive_text()
 
     except WebSocketDisconnect:
